@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Recetario</title>
+  <!-- Tipografía Serif Cálida (Arvo / Georgia) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+  <style>
+    :root {
+      /* Paleta cálida basada en la imagen */
+      --header-bg: #3b2219;        /* Marrón chocolate oscuro */
+      --header-text: #f5ebe0;      /* Texto claro crema */
+      --accent-gold: #d99b38;      /* Ocre / Caramelo */
+      --accent-hover: #b87e28;
+      --bg: #f4ece1;               /* Fondo crema cálido */
+      --surface: rgba(250, 246, 240, 0.93); /* Superficie semi-transparente para ver el fondo */
+      --text: #3b2219;             /* Texto marrón principal */
+      --text-muted: #785a4f;       /* Marrón suave secundario */
+      --border: #e0d2c1;
+      --danger: #be382c;
+      --radius: 12px;
+      --shadow: 0 4px 10px rgba(59, 34, 25, 0.08);
+      --shadow-hover: 0 8px 18px rgba(59, 34, 25, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      /* Patrón SVG repetitivo de monitos, fusilli, farfalle y tortellini sutiles de fondo */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23d99b38' fill-opacity='0.18'%3E%3C!-- Farfalle / Moñito --%3E%3Cpath d='M15 15 C 10 8, 5 8, 2 15 C 5 22, 10 22, 15 15 Z M 15 15 C 20 8, 25 8, 28 15 C 25 22, 20 22, 15 15 Z' /%3E%3Ccircle cx='15' cy='15' r='1.5' /%3E%3C!-- Fusilli / Espiral --%3E%3Cpath d='M80 20 Q 85 15, 90 20 T 100 20' stroke='%23d99b38' stroke-opacity='0.18' stroke-width='3' fill='none' stroke-linecap='round' /%3E%3C!-- Rigatoni / Tubo --%3E%3Crect x='20' y='75' width='16' height='8' rx='2' transform='rotate(-25 28 79)' /%3E%3C!-- Ravioli / Cuadrado calado --%3E%3Cpath d='M75 75 L87 75 L87 87 L75 87 Z' stroke='%23d99b38' stroke-opacity='0.18' stroke-width='2' fill='none' /%3E%3Ccircle cx='81' cy='81' r='2' /%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, .logo-title {
+      font-family: 'Arvo', Georgia, serif;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 0;
+    }
+
+    /* Header superior estilo cálido */
+    .app-header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 24px 20px 20px 20px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-title {
+      font-size: 1.8rem;
+      color: #fff;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .logo-sub {
+      font-family: 'Arvo', serif;
+      font-size: 0.95rem;
+      color: #d1b8a5;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .header-icons {
+      font-size: 1.8rem;
+      letter-spacing: 6px;
+    }
+
+    /* Navegación dentro del Header */
+    #nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-top: 8px;
+    }
+
+    #nav button {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'Arvo', serif;
+      font-size: 0.85rem;
+      color: #f5ebe0;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    #nav button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    #nav button.on {
+      background: var(--accent-gold);
+      color: #26130d;
+      border-color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    h2 { font-size: 1.6rem; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 1.25rem; margin: 24px 0 12px 0; color: var(--header-bg); }
+
+    .row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1; }
+
+    .bx {
+      background: var(--surface);
+      backdrop-filter: blur(3px);
+      padding: 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .g {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .c {
+      background: var(--surface);
+      backdrop-filter: blur(3px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      position: relative;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .c:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent-gold);
+      background: #faf6f0;
+    }
+
+    .c b {
+      font-family: 'Arvo', serif;
+      font-size: 1.1rem;
+      color: var(--header-bg);
+      display: block;
+      margin-bottom: 6px;
+      padding-right: 24px;
+    }
+
+    .c small {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .fav-star {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 1.3rem;
+      color: var(--accent-gold);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .b {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Arvo', serif;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .b:hover {
+      background: #eee3d5;
+      border-color: #d1bfab;
+    }
+
+    .b.p {
+      background: var(--accent-gold);
+      border-color: var(--accent-gold);
+      color: #2b1704;
+      font-weight: 700;
+    }
+
+    .b.p:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: #fff;
+    }
+
+    .b.d {
+      background: #fdf2f2;
+      border-color: #f8b4b4;
+      color: var(--danger);
+    }
+
+    .b.d:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      margin: 6px 0 16px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(217, 155, 56, 0.2);
+    }
+
+    textarea { height: 110px; resize: vertical; }
+
+    .tag {
+      background: #ebdccb;
+      color: var(--text);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 4px;
+      display: inline-block;
+    }
+
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .chips .b { font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; }
+
+    .mu { color: var(--text-muted); font-style: italic; }
+
+    .warn {
+      color: #723b10;
+      background: #fce8cc;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      border: 1px solid #f2cf9b;
+      font-family: 'Arvo', serif;
+      font-size: 0.9rem;
+    }
+
+    ul, ol { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+
+    @media print {
+      .noprint, .app-header { display: none !important; }
+      body { background: #fff; padding: 0; color: #000; }
+      main { max-width: 100%; margin: 0; padding: 0; }
+      .bx { box-shadow: none; border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header noprint">
+    <div class="header-content">
+      <div class="logo-container">
+        <div>
+          <h1 class="logo-title">Mi Recetario</h1>
+          <div class="logo-sub">tus recetas, siempre a mano</div>
+        </div>
+        <div class="header-icons">🎀 〰️ 🍲</div>
+      </div>
+      <nav id="nav"></nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="v"></div>
+  </main>
+
+  <script>
+    const CATS0 = ["Entradas", "Platos Principales", "Postres", "Bebidas", "Salsas", "Panadería"];
+    const KW = {
+      entradas: "ensalada,sopa,entrada,aperitivo,bruschetta,carpaccio",
+      principales: "carne,pollo,pasta,arroz,pescado,guiso,milanesa,tarta,pizza",
+      postres: "torta,pastel,flan,helado,galletitas,chocolate,dulce,brownie",
+      bebidas: "cocktail,jugo,licuado,trago,limonada",
+      salsas: "salsa,aderezo,vinagreta,mayonesa,pesto",
+      panaderia: "pan,amasado,facturas,medialunas,brioche"
+    };
+    const MAP = {
+      entradas: "Entradas",
+      principales: "Platos Principales",
+      postres: "Postres",
+      bebidas: "Bebidas",
+      salsas: "Salsas",
+      panaderia: "Panadería"
+    };
+
+    let useM = false;
+    let MEM = { rec: new Map(), meta: new Map(), pdf: new Map() };
+    let db = null;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("MiRecetarioDB", 1);
+        req.onupgradeneeded = e => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains("rec")) d.createObjectStore("rec", { keyPath: "id" });
+          if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta", { keyPath: "k" });
+          if (!d.objectStoreNames.contains("pdf")) d.createObjectStore("pdf", { keyPath: "id" });
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(); };
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    const tx = (store, mode = "readonly") => db.transaction(store, mode).objectStore(store);
+    const kp = s => s === "meta" ? "k" : "id";
+    const all = s => useM ? Promise.resolve([...MEM[s].values()]) : new Promise((r, ej) => {
+      const q = tx(s).getAll();
+      q.onsuccess = () => r(q.result);
+      q.onerror = () => ej(q.error);
+    });
+
+    const put = (s, o) => useM ? (MEM[s].set(o[kp(s)], o), Promise.resolve()) : new Promise(r => {
+      const q = tx(s, "readwrite").put(o);
+      q.onsuccess = () => r();
+    });
+    const del = (s, k) => useM ? (MEM[s].delete(k), Promise.resolve()) : new Promise(r => {
+      const q = tx(s, "readwrite").delete(k);
+      q.onsuccess = () => r();
+    });
+    const get = (s, k) => useM ? Promise.resolve(MEM[s].get(k)) : new Promise(r => {
+      const q = tx(s).get(k);
+      q.onsuccess = () => r(q.result);
+    });
+
+    let R = [], CATS = [...CATS0], view = "home", cur = null, pend = [], log = [], F = { q: "", cat: "", ord: "n", fav: 0, pdf: 0 };
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    async function load() {
+      R = await all("rec");
+      const m = await get("meta", "cats");
+      if (m) CATS = m.v;
+    }
+    const saveCats = () => put("meta", { k: "cats", v: CATS });
+
+    const ING_H = /^(ingredientes?|ingredients?)\b/i, PAS_H = /^(preparaci[oó]n|procedimiento|paso a paso|elaboraci[oó]n|modo de preparaci[oó]n|instrucciones|m[eé]todo)\b/i;
+
+    async function pdfText(file) {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
+      let lines = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const t = await (await pdf.getPage(p)).getTextContent();
+        let y = null, l = "";
+        for (const it of t.items) {
+          const yy = Math.round(it.transform[5]);
+          if (y !== null && Math.abs(yy - y) > 3) { lines.push(l.trim()); l = ""; }
+          y = yy; l += it.str + (it.hasEOL ? "\n" : " ");
+        }
+        lines.push(l.trim()); lines.push("\f");
+      }
+      return lines.join("\n").split("\n").map(s => s.trim());
+    }
+
+    function guessCat(t) {
+      const n = norm(t);
+      for (const [k, v] of Object.entries(KW)) {
+        if (v && v.split(",").some(w => n.includes(norm(w)))) return MAP[k] || k;
+      }
+      return "";
+    }
+
+    function parse(lines, fname) {
+      const L = lines.filter(l => l !== "");
+      let ing = [], pas = [], name = "", mode = "", meta = {};
+      const ni = L.findIndex(l => ING_H.test(l));
+      name = (ni > 0 ? L.slice(0, ni).find(l => l.length > 2 && l.length < 80 && !/^\d+$/.test(l)) : L.find(l => l.length > 2 && l.length < 80)) || "";
+      for (const l0 of L) {
+        const l = l0.replace(/^[#*\s]+/, "");
+        let m;
+        if ((m = l.match(/porciones?\s*:?\s*(\d+)/i) || l.match(/rinde\s*:?\s*(\d+)/i) || l.match(/(\d+)\s*porciones/i))) meta.porciones = meta.porciones || m[1];
+        if ((m = l.match(/(?:tiempo de )?preparaci[oó]n\s*:\s*([^\n]{1,25})/i))) meta.prep = meta.prep || m[1];
+        if ((m = l.match(/(?:tiempo de )?cocci[oó]n\s*:\s*([^\n]{1,25})/i))) meta.coc = meta.coc || m[1];
+        if ((m = l.match(/tiempo total\s*:\s*([^\n]{1,25})/i))) meta.tot = meta.tot || m[1];
+        if (ING_H.test(l)) { mode = "i"; const r = l.replace(ING_H, "").replace(/^[\s:]+/, ""); if (r) ing.push(r); continue; }
+        if (PAS_H.test(l)) { mode = "p"; const r = l.replace(PAS_H, "").replace(/^[\s:]+/, ""); if (r) pas.push(r); continue; }
+        if (mode === "i") ing.push(l.replace(/^[•\-–*·▪]\s*/, ""));
+        else if (mode === "p") pas.push(l.replace(/^(\d+[.)\-]|paso\s*\d+\s*:?)\s*/i, ""));
+      }
+      const steps = [];
+      for (const l of pas) {
+        if (steps.length && /^[a-zñáéíóú,]/.test(l) && !/[.!]$/.test(steps[steps.length - 1])) steps[steps.length - 1] += " " + l;
+        else steps.push(l);
+      }
+      const flags = [];
+      if (!ing.length) flags.push("No se identificaron ingredientes");
+      if (!steps.length) flags.push("No se identificó el procedimiento");
+      if (!name) flags.push("No se identificó el nombre");
+      return { id: uid(), nombre: name || fname.replace(/\.pdf$/i, ""), cat: guessCat(name + " " + ing.join(" ")), ing: ing.join("\n"), pasos: steps.join("\n"), prep: meta.prep || "", coc: meta.coc || "", tot: meta.tot || "", porc: meta.porciones || "", dif: "", obs: "", tags: [], fav: 0, fecha: Date.now(), flags };
+    }
+
+    function split(lines, fname) {
+      const idx = [];
+      lines.forEach((l, i) => { if (ING_H.test(l)) idx.push(i); });
+      if (idx.length < 2) return [parse(lines, fname)];
+      const out = [];
+      for (let k = 0; k < idx.length; k++) {
+        let a = idx[k] - 1;
+        while (a > 0 && !lines[a]) a--;
+        let st = a;
+        let en = k + 1 < idx.length ? (() => { let b = idx[k + 1] - 1; while (b > 0 && !lines[b]) b--; return b; })() : lines.length;
+        out.push(parse(lines.slice(st, en), fname));
+      }
+      return out;
+    }
+
+    function dupOf(r) {
+      const n = norm(r.nombre), ings = new Set(norm(r.ing).split(/\n/).filter(Boolean));
+      return R.find(x => {
+        if (norm(x.nombre) === n) return true;
+        const b = new Set(norm(x.ing).split(/\n/).filter(Boolean));
+        if (!ings.size || !b.size) return false;
+        let c = 0;
+        ings.forEach(i => b.has(i) && c++);
+        return c / Math.max(ings.size, b.size) > .8;
+      });
+    }
+
+    async function importFiles(files) {
+      pend = []; log = []; render(); const el = document.getElementById("prog"); let i = 0;
+      for (const f of files) {
+        i++;
+        if (el) el.textContent = `Procesando ${i} de ${files.length}: ${f.name}`;
+        try {
+          if (!/\.pdf$/i.test(f.name)) throw new Error("No es un PDF");
+          const lines = await pdfText(f);
+          if (lines.join("").replace(/\f/g, "").length < 30) throw new Error("El PDF no tiene texto seleccionable.");
+          split(lines, f.name).forEach(r => {
+            r.file = f;
+            const d = dupOf(r);
+            if (d) { r.dup = d.id; r.accion = "ignorar"; }
+            pend.push(r);
+          });
+        } catch (e) { log.push(`${f.name}: ${e.message}`); }
+      }
+      view = "review"; render();
+    }
+
+    function match(r, q) {
+      if (!q.trim()) return true;
+      const hay = norm([r.nombre, r.cat, r.ing, r.tags.join(" ")].join(" "));
+      const stop = /\b(recetas?|con|de|del|la|el|y|e|en|para|los|las)\b/g;
+      const terms = norm(q).replace(stop, " ").split(/[,;]|\s+/).map(s => s.trim()).filter(s => s.length > 1);
+      return terms.every(t => hay.includes(t.replace(/s$/, "")));
+    }
+
+    function list() {
+      let l = R.filter(r => match(r, F.q) && (!F.cat || r.cat === F.cat) && (!F.fav || r.fav) && (!F.pdf || r.hasPdf));
+      l.sort((a, b) => F.ord === "f" ? b.fecha - a.fecha : a.nombre.localeCompare(b.nombre));
+      return l;
+    }
+
+    const card = r => `<div class="c" onclick="show('${r.id}')">
+      <span class="fav-star" onclick="event.stopPropagation();fav('${r.id}')">${r.fav ? "★" : "☆"}</span>
+      <div>
+        <b>${E(r.nombre)}</b>
+        <small>${E(r.cat || "Sin categoría")}</small>
+      </div>
+      <div>${r.tags.map(t => `<span class="tag">${E(t)}</span>`).join("")}</div>
+    </div>`;
+
+    const grid = l => l.length ? `<div class="g">${l.map(card).join("")}</div>` : `<p class="mu">No se encontraron recetas con esos criterios.</p>`;
+    
+    function filters() {
+      return `<input id="q" placeholder="🔍 Buscar por nombre o ingredientes..." value="${E(F.q)}" oninput="F.q=this.value;sub()">
+      <div class="row">
+        <select onchange="F.cat=this.value;sub()">
+          <option value="">Todas las categorías</option>${CATS.map(c => `<option ${F.cat === c ? "selected" : ""}>${E(c)}</option>`).join("")}
+        </select>
+        <select onchange="F.ord=this.value;sub()">
+          <option value="n" ${F.ord == "n" ? "selected" : ""}>Ordenar por nombre</option>
+          <option value="f" ${F.ord == "f" ? "selected" : ""}>Más recientes primero</option>
+        </select>
+      </div>`;
+    }
+
+    function sub() { const e = document.getElementById("res"); if (e) e.innerHTML = grid(list()); }
+
+    function render() {
+      document.getElementById("nav").innerHTML = [["home", "Inicio"], ["lib", "Mis recetas"], ["import", "Importar PDF"], ["new", "Nueva receta"], ["cats", "Categorías"], ["bk", "Copias"]].map(([k, t]) => `<button class="${view === k ? "on" : ""}" onclick="go('${k}')">${t}</button>`).join("");
+      const v = document.getElementById("v");
+      if (view === "home") {
+        const fv = R.filter(r => r.fav), rc = [...R].sort((a, b) => b.fecha - a.fecha).slice(0, 6);
+        v.innerHTML = `${filters()}<div id="res">${F.q || F.cat ? grid(list()) : ""}</div>
+        <div class="row noprint" style="margin-top:20px;">
+          <button class="b p" onclick="go('import')">📄 Importar PDF</button>
+          <button class="b" onclick="go('new')">✏️ Crear receta manual</button>
+        </div>
+        <h3>Categorías</h3><div class="chips">${CATS.map(c => `<button class="b" onclick="F.cat='${E(c).replace(/'/g, "\\'")}';go('lib')">${E(c)}</button>`).join("")}</div>
+        <h3>Favoritas ⭐</h3>${fv.length ? grid(fv) : '<p class="mu">Todavía no marcaste favoritas (☆).</p>'}
+        <h3>Agregadas recientemente</h3>${rc.length ? grid(rc) : '<p class="mu">Aún no hay recetas. ¡Importá un PDF o creá una!</p>'}`;
+      } else if (view === "lib") {
+        v.innerHTML = `<h2>Mis recetas (${R.length})</h2>${filters()}<div class="chips"><button class="b ${!F.fav && !F.pdf ? "p" : ""}" onclick="F.fav=0;F.pdf=0;render()">Todas</button><button class="b ${F.fav ? "p" : ""}" onclick="F.fav=1;F.pdf=0;render()">Favoritas</button><button class="b ${F.pdf ? "p" : ""}" onclick="F.pdf=1;F.fav=0;render()">Con PDF</button><button class="b" onclick="F.ord='f';render()">Recientes</button></div><div id="res">${grid(list())}</div>`;
+      } else if (view === "import") {
+        v.innerHTML = `<h2>Importar desde PDF</h2><div class="bx"><p class="mu">Elegí uno o varios archivos PDF. Extraeremos automáticamente los ingredientes y los pasos.</p><input type="file" id="f" accept="application/pdf" multiple><button class="b p" onclick="importFiles([...document.getElementById('f').files])">Procesar archivos</button><p id="prog" class="mu"></p>${log.map(l => `<p class="warn">⚠ ${E(l)}</p>`).join("")}</div>`;
+      } else if (view === "review") {
+        v.innerHTML = `<h2>Revisar recetas (${pend.length})</h2>${log.map(l => `<p class="warn">⚠ ${E(l)}</p>`).join("")}${pend.map((r, i) => form(r, "P" + i, i)).join("") || '<p class="mu">Nada para revisar.</p>'}${pend.length ? `<button class="b p" onclick="savePend()">Guardar todas</button>` : ""}`;
+      } else if (view === "new") {
+        cur = { id: uid(), nombre: "", cat: "", ing: "", pasos: "", prep: "", coc: "", tot: "", porc: "", dif: "", obs: "", tags: [], fav: 0, fecha: Date.now(), flags: [] };
+        v.innerHTML = `<h2>Nueva receta</h2>${form(cur, "N")}<button class="b p" onclick="saveForm('N',cur)">Guardar receta</button>`;
+      } else if (view === "edit") {
+        v.innerHTML = `<h2>Editar receta</h2>${form(cur, "N")}<button class="b p" onclick="saveForm('N',cur,true)">Guardar cambios</button> <button class="b" onclick="show('${cur.id}')">Cancelar</button>`;
+      } else if (view === "det") {
+        v.innerHTML = detail(cur, 1);
+      } else if (view === "cats") {
+        v.innerHTML = `<h2>Gestión de Categorías</h2><div class="bx">${CATS.map((c, i) => `<div class="row"><input value="${E(c)}" onchange="renCat(${i},this.value)"><button class="b d" style="flex:0" onclick="delCat(${i})">Eliminar</button></div>`).join("")}<div class="row"><input id="nc" placeholder="Nueva categoría"><button class="b p" style="flex:0" onclick="addCat()">Agregar</button></div></div>`;
+      } else if (view === "bk") {
+        v.innerHTML = `<h2>Copias de seguridad</h2><div class="bx"><p class="mu">Los datos viven localmente en tu navegador. Exportá una copia para resguardarlos.</p><button class="b p" onclick="expJSON(false)">Descargar copia completa (JSON + PDFs)</button> <button class="b" onclick="expJSON(true)">Exportar solo recetas (JSON)</button> <button class="b" onclick="expAll()">Imprimir / PDF</button><h3>Restaurar datos</h3><input type="file" id="rf" accept=".json"><button class="b" onclick="restore()">Restaurar desde JSON</button></div>`;
+      }
+    }
+
+    function form(r, p, i) {
+      const d = r.dup ? R.find(x => x.id === r.dup) : null;
+      return `<div class="bx" id="fm${p}">${r.flags?.length ? `<p class="warn">⚠ ${r.flags.map(E).join(" · ")}.</p>` : ""}${d ? `<p class="warn">Posible duplicado: "${E(d.nombre)}". <select id="ac${p}"><option value="ignorar">Ignorar</option><option value="actualizar">Actualizar existente</option><option value="copia">Guardar copia</option></select></p>` : ""}
+      <label>Nombre de la receta *</label><input id="n${p}" value="${E(r.nombre)}">
+      <label>Categoría *</label><select id="c${p}"><option value="">Elegí una opción...</option>${CATS.map(c => `<option ${r.cat === c ? "selected" : ""}>${E(c)}</option>`).join("")}</select>
+      <div class="row">
+        <div><label>Preparación</label><input id="pr${p}" value="${E(r.prep)}"></div>
+        <div><label>Cocción</label><input id="co${p}" value="${E(r.coc)}"></div>
+        <div><label>Total</label><input id="to${p}" value="${E(r.tot)}"></div>
+        <div><label>Porciones</label><input id="po${p}" value="${E(r.porc)}"></div>
+        <div><label>Dificultad</label><select id="di${p}">${["", "Fácil", "Media", "Difícil"].map(x => `<option ${r.dif === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+      </div>
+      <label>Ingredientes (uno por línea)</label><textarea id="i${p}">${E(r.ing)}</textarea>
+      <label>Paso a paso (uno por línea)</label><textarea id="s${p}">${E(r.pasos)}</textarea>
+      <label>Etiquetas (separadas por coma)</label><input id="t${p}" value="${E(r.tags.join(", "))}">
+      <label>Notas / Observaciones</label><textarea id="o${p}">${E(r.obs)}</textarea>
+      ${i !== undefined ? `<button class="b d" onclick="pend.splice(${i},1);render()">Descartar</button>` : ""}</div>`;
+    }
+
+    function read(p, r) {
+      const g = id => document.getElementById(id + p).value;
+      return { ...r, nombre: g("n").trim(), cat: g("c"), prep: g("pr"), coc: g("co"), tot: g("to"), porc: g("po"), dif: g("di"), ing: g("i").trim(), pasos: g("s").trim(), obs: g("o"), tags: g("t").split(",").map(s => s.trim()).filter(Boolean) };
+    }
+
+    function valid(r) {
+      if (!r.nombre) return "El nombre es obligatorio.";
+      if (!r.cat) return "Elegí una categoría.";
+      return "";
+    }
+
+    async function persist(r) {
+      const f = r.file;
+      const hasPdf = !!f || r.hasPdf;
+      const o = { ...r, hasPdf };
+      delete o.file; delete o.flags; delete o.dup; delete o.accion;
+      await put("rec", o);
+      if (f) await put("pdf", { id: o.id, name: f.name, blob: f });
+    }
+
+    async function savePend() {
+      let out = [];
+      for (let i = 0; i < pend.length; i++) {
+        const r = read("P" + i, pend[i]);
+        const e = valid(r);
+        if (e) { alert(e); return; }
+        const a = document.getElementById("acP" + i)?.value;
+        if (r.dup && a === "ignorar") continue;
+        if (r.dup && a === "actualizar") {
+          const old = R.find(x => x.id === r.dup);
+          r.id = old.id; r.fav = old.fav; r.fecha = old.fecha;
+        } else if (r.dup && a === "copia") {
+          r.nombre += " (copia)";
+        }
+        out.push(r);
+      }
+      for (const r of out) await persist(r);
+      await load(); pend = []; alert(`Se guardaron ${out.length} recetas.`); view = "lib"; render();
+    }
+
+    async function saveForm(p, base, edit) {
+      const r = read(p, base);
+      const e = valid(r);
+      if (e) { alert(e); return; }
+      if (!edit) r.fecha = Date.now();
+      await persist(r); await load(); show(r.id);
+    }
+
+    function show(id) { cur = R.find(x => x.id === id); view = "det"; render(); }
+    
+    function scaleQ(s, k) {
+      return s.replace(/(\d+)\s*\/\s*(\d+)|(\d+[.,]?\d*)/g, (m, a, b, c) => {
+        const n = a ? (+a) / (+b) : parseFloat(c.replace(",", "."));
+        const v = Math.round(n * k * 100) / 100;
+        return String(v).replace(".", ",");
+      });
+    }
+
+    function detail(r, k) {
+      return `<div class="bx">
+        <div class="row noprint" style="margin-bottom: 20px;">
+          <button class="b" onclick="go('lib')" style="flex:0">← Volver</button>
+          <button class="b" onclick="fav('${r.id}',1)">${r.fav ? "★ Favorita" : "☆ Favorita"}</button>
+          <button class="b" onclick="edit('${r.id}')">✏️ Editar</button>
+          <button class="b" onclick="window.print()">🖨️ Imprimir</button>
+          ${r.hasPdf ? `<button class="b" onclick="dlPdf('${r.id}')">📄 PDF Original</button>` : ""}
+          <button class="b d" onclick="rm('${r.id}')">Eliminar</button>
+        </div>
+        <h2>${E(r.nombre)}</h2>
+        <p class="mu">${E(r.cat)} · ${[r.prep && "Prep. " + r.prep, r.coc && "Cocción " + r.coc, r.tot && "Total " + r.tot, r.porc && r.porc + " porciones", r.dif].filter(Boolean).map(E).join(" · ")}</p>
+        <div style="margin-bottom:15px;">${r.tags.map(t => `<span class="tag">${E(t)}</span>`).join("")}</div>
+        
+        <h3>Ingredientes</h3>
+        <div class="noprint" style="margin-bottom:10px;">
+          Multiplicar por: <select id="sc" style="width:auto; display:inline-block;" onchange="document.getElementById('il').innerHTML=sl(cur,+this.value)">
+            <option value="1">×1 (Original)</option>
+            <option value="0.5">×½</option>
+            <option value="2">×2</option>
+            <option value="3">×3</option>
+          </select>
+        </div>
+        <ul id="il">${sl(r, k)}</ul>
+        
+        <h3>Paso a paso</h3>
+        <ol>${r.pasos.split("\n").filter(Boolean).map(s => `<li>${E(s)}</li>`).join("")}</ol>
+        ${r.obs ? `<h3>Observaciones</h3><p>${E(r.obs)}</p>` : ""}
+      </div>`;
+    }
+
+    const sl = (r, k) => r.ing.split("\n").filter(Boolean).map(s => `<li>${E(k === 1 ? s : scaleQ(s, k))}</li>`).join("");
+
+    async function fav(id, d) {
+      const r = R.find(x => x.id === id);
+      r.fav = r.fav ? 0 : 1;
+      await put("rec", r);
+      d ? show(id) : render();
+    }
+
+    function edit(id) { cur = R.find(x => x.id === id); view = "edit"; render(); }
+
+    async function rm(id) {
+      if (!confirm("¿Eliminar esta receta?")) return;
+      await del("rec", id); await del("pdf", id); await load(); go("lib");
+    }
+
+    async function dlPdf(id) { const p = await get("pdf", id); dl(p.blob, p.name); }
+    function dl(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
+
+    function renCat(i, v) {
+      const o = CATS[i]; v = v.trim(); if (!v) return; CATS[i] = v;
+      R.forEach(async r => { if (r.cat === o) { r.cat = v; await put("rec", r); } });
+      saveCats();
+    }
+
+    function delCat(i) {
+      if (R.some(r => r.cat === CATS[i])) { alert("Hay recetas con esta categoría."); return; }
+      CATS.splice(i, 1); saveCats(); render();
+    }
+
+    function addCat() {
+      const v = document.getElementById("nc").value.trim();
+      if (v && !CATS.includes(v)) { CATS.push(v); saveCats(); render(); }
+    }
+
+    const b64 = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+
+    async function expJSON(only) {
+      const pdfs = only ? [] : await Promise.all((await all("pdf")).map(async p => ({ id: p.id, name: p.name, data: await b64(p.blob) })));
+      dl(new Blob([JSON.stringify({ app: "mi-recetario", v: 1, fecha: new Date().toISOString(), cats: CATS, recetas: R, pdfs })], { type: "application/json" }), `mi-recetario-${new Date().toISOString().slice(0, 10)}.json`);
+    }
+
+    async function restore() {
+      const f = document.getElementById("rf").files[0];
+      if (!f) return alert("Elegí un archivo .json");
+      try {
+        const d = JSON.parse(await f.text());
+        if (d.app !== "mi-recetario") throw 0;
+        CATS = [...new Set([...CATS, ...(d.cats || [])])];
+        await saveCats();
+        let n = 0;
+        for (const r of d.recetas) {
+          if (R.some(x => x.id === r.id)) continue;
+          await put("rec", r); n++;
+        }
+        for (const p of d.pdfs || []) {
+          if (await get("pdf", p.id)) continue;
+          await put("pdf", { id: p.id, name: p.name, blob: await (await fetch(p.data)).blob() });
+        }
+        await load(); alert(`Restauradas ${n} recetas.`); go("lib");
+      } catch (e) { alert("El archivo no es válido."); }
+    }
+
+    function expAll() {
+      document.getElementById("v").innerHTML = [...R].sort((a, b) => a.nombre.localeCompare(b.nombre)).map(r => `<div style="page-break-after:always">${detail(r, 1)}</div>`).join("");
+      window.print(); render();
+    }
+
+    function go(v) { view = v; if (v !== "lib") F.fav = F.pdf = 0; render(); scrollTo(0, 0); }
+
+    openDB().then(load).then(render).catch(async e => {
+      useM = true;
+      await load();
+      render();
+      document.getElementById("v").insertAdjacentHTML("afterbegin", '<p class="warn">⚠ Este navegador no permite guardar datos de forma permanente cuando se abre el archivo local directamente. Descargá una copia antes de salir.</p>');
+    });
+  </script>
+</body>
+</html>
